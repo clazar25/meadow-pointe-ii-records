@@ -6,7 +6,7 @@ from urllib.parse import urljoin,urlparse,urldefrag
 import fitz,requests
 from bs4 import BeautifulSoup
 
-ROOT='https://www.meadowpointe2cdd.org'
+ROOT='https://meadowpointe2cdd.org'
 START=[ROOT+'/documents',ROOT+'/meetings']
 OUTPUT=Path('records.json')
 MAX_HTML=300
