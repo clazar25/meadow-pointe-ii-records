@@ -26,6 +26,13 @@ jobs:
       - name: Install requirements
         run: pip install -r requirements.txt
 
+            - name: Install certificate chain
+        run: |
+          curl --fail --location --silent --show-error \
+            https://letsencrypt.org/certs/gen-y/root-yr-by-x1.pem \
+            -o /tmp/root-yr.pem
+          cat /tmp/root-yr.pem >> "$(python -m certifi)"
+
       - name: Collect CDD documents
         run: python collect.py
 
