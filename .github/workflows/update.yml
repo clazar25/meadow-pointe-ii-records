@@ -24,7 +24,7 @@ jobs:
           python-version: '3.12'
 
       - name: Install requirements
-        run: pip install -r requirements.txt.
+        run: pip install -r requirements.txt
       - name: Install certificate chain
         run: |
           curl --fail --location --silent --show-error \
