@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 
 ROOT='https://www.meadowpointe2cdd.org'
 START=[ROOT+'/documents',ROOT+'/meetings']
-OUTPUT=Path('docs/records.json')
+OUTPUT=Path('records.json')
 MAX_HTML=300
 MAX_PDFS=500
 MAX_PDF_BYTES=25*1024*1024
