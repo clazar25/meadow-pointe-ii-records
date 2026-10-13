@@ -24,9 +24,8 @@ jobs:
           python-version: '3.12'
 
       - name: Install requirements
-        run: pip install -r requirements.txt
-
-            - name: Install certificate chain
+        run: pip install -r requirements.txt.
+      - name: Install certificate chain
         run: |
           curl --fail --location --silent --show-error \
             https://letsencrypt.org/certs/gen-y/root-yr-by-x1.pem \
