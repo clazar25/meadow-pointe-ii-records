@@ -70,14 +70,33 @@ function search() {
     (!term || (String(p.title || '') + ' ' + String(p.text || '')).toLowerCase().includes(term))
   );
 
+  
+  // Group identical PDFs using their SHA-256 fingerprints.
+  // Keep the original archive unchanged.
   const groups = new Map();
+
   for (const page of matches) {
-    const key = page.source || page.url || `${page.title}|${page.year}`;
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key).push(page);
+    const key = page.sha256
+      ? `sha256:${page.sha256}`
+      : `source:${page.source || page.url || `${page.title}|${page.year}`}`;
+
+    if (!groups.has(key)) groups.set(key, new Map());
+
+    const group = groups.get(key);
+    const number = Number(page.page);
+    const pageKey = Number.isSafeInteger(number) && number > 0
+      ? `page:${number}`
+      : `unknown:${page.source || page.url || ''}:${page.text || ''}`;
+
+    if (!group.has(pageKey)) group.set(pageKey, page);
   }
 
-  const documents = [...groups.values()].map(group => {
+  const uniqueMatches = [...groups.values()]
+    .reduce((sum, group) => sum + group.size, 0);
+
+  const documents = [...groups.values()].map(pageMap => {
+    const group = [...pageMap.values()];
+
     group.sort((a, b) => Number(a.page) - Number(b.page));
     const ranked = [...group].sort((a, b) =>
       scorePage(b, term) - scorePage(a, term) || Number(a.page) - Number(b.page)
@@ -98,7 +117,7 @@ function search() {
 
   status.textContent =
     `${documents.length.toLocaleString()} matching documents · ` +
-    `${matches.length.toLocaleString()} matching pages · ` +
+    `${uniqueMatches.toLocaleString()} matching pages · ` +
     `${pages.length.toLocaleString()} indexed pages`;
 
   results.innerHTML = documents.slice(0, visibleDocuments).map(doc => {
