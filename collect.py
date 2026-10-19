@@ -21,6 +21,30 @@ def is_cdd_page(url):
 
 def pdf_link(url):
     return urlparse(url).path.lower().endswith('.pdf')
+
+def classify_page(text, document_type):
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    heading = ' '.join(lines[:8]).lower()
+
+    # Identify meeting minutes by their headings.
+    minutes_heading = (
+        re.search(r'\b(meeting|workshop)\s+minutes\b', heading)
+        or re.search(r'\bminutes\s+of\s+(the\s+)?', heading)
+        or re.search(r'\b(draft|approved)\s+minutes\b', heading)
+    )
+
+    if minutes_heading:
+        return 'Minutes'
+
+    # Identify actual agenda pages.
+    if re.search(r'\b(meeting|workshop)\s+agenda\b', heading):
+        return 'Agenda'
+
+    # Keep separately published minutes categorized as minutes.
+    if document_type == 'Minutes':
+        return 'Minutes'
+
+    return 'Supporting Documents'
     
 def classify_document(title, filename):
     name = (title + ' ' + filename).lower()
@@ -68,7 +92,14 @@ for url,title in list(pdfs.items())[:MAX_PDFS]:
         digest=hashlib.sha256(data).hexdigest()
         old=old_by_url.get(url,[])
         if old and old[0].get('sha256')==digest:
-            indexed.extend(old);continue
+            for item in old:
+                updated = item.copy()
+                updated['type'] = classify_page(
+                    updated.get('text', ''),
+                    classify_document(updated.get('title', title), urlparse(url).path.rsplit('/', 1)[-1])
+                )
+                indexed.append(updated)
+            continue
         doc=fitz.open(stream=bytes(data),filetype='pdf')
         filename=urlparse(url).path.rsplit('/',1)[-1]
         combined=(title+' '+filename).lower()
@@ -77,7 +108,7 @@ for url,title in list(pdfs.items())[:MAX_PDFS]:
         year=years[0] if years else ''
         for number,page in enumerate(doc,1):
             text=page.get_text(sort=True).strip()
-            indexed.append({'source':url,'url':url,'title':title,'type':kind,'year':year,'page':number,'text':text[:25000],'sha256':digest,'needs_ocr':not bool(text)})
+            indexed.append({'source':url,'url':url,'title':title,'type':classify_page(text, kind),'year':year,'page':number,'text':text[:25000],'sha256':digest,'needs_ocr':not bool(text)})
         print('Indexed',title,len(doc),'pages')
     except (requests.RequestException,ValueError,RuntimeError) as exc:
         errors+=1;print('PDF skipped:',url,exc)
@@ -89,6 +120,18 @@ for url,items in old_by_url.items():
     if url not in found:indexed.extend(items)
 if not pdfs:
     raise SystemExit('No PDFs found; refusing to overwrite the prior index. Check site structure and crawler logs.')
+# Group pages from the same PDF.
+by_source = {}
+for item in indexed:
+    by_source.setdefault(item['source'], []).append(item)
+
+for pages in by_source.values():
+    pages.sort(key=lambda p: p['page'])
+
+    for item in pages:
+        # Keep the classification determined from each page.
+        # Do not assume that every following page is minutes.
+        item['type'] = item.get('type', 'Supporting Documents')
 indexed.sort(key=lambda p:(p.get('year',''),p['title'],p['page']),reverse=True)
 OUTPUT.write_text(json.dumps({'updated':datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC'),'pages':indexed},ensure_ascii=False,separators=(',',':')))
 print('Indexed',len(indexed),'pages across',len(set(x['source'] for x in indexed)),'PDFs; failures',errors)
