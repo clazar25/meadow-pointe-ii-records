@@ -21,6 +21,16 @@ def is_cdd_page(url):
 
 def pdf_link(url):
     return urlparse(url).path.lower().endswith('.pdf')
+    
+def classify_document(title, filename):
+    name = (title + ' ' + filename).lower()
+
+    if 'minute' in name:
+        return 'Minutes'
+    if 'agenda' in name:
+        return 'Agenda'
+    return 'Other'
+
 
 queue=list(START);visited=set();pdfs={}
 while queue and len(visited)<MAX_HTML:
