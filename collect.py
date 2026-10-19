@@ -17,7 +17,7 @@ START = [ROOT + '/documents', ROOT + '/meetings']
 OUTPUT = Path('records.json')
 MAX_HTML = 300
 MAX_PDFS = 500
-MAX_PDF_BYTES = 25 * 1024 * 1024
+MAX_PDF_BYTES = 80 * 1024 * 1024
 
 session = requests.Session()
 session.headers['User-Agent'] = (
@@ -193,13 +193,13 @@ def main():
     for url, title in list(pdfs.items())[:MAX_PDFS]:
         old = old_by_url.get(url, [])
         try:
-            with session.get(url, timeout=40, stream=True) as response:
+            with session.get(url, timeout=90, stream=True) as response:
                 response.raise_for_status()
                 data = bytearray()
                 for chunk in response.iter_content(65536):
                     data.extend(chunk)
                     if len(data) > MAX_PDF_BYTES:
-                        raise ValueError('PDF exceeds size limit')
+                        raise ValueError(f'PDF exceeds {MAX_PDF_BYTES // (1024 * 1024)} MB size limit')
             if not data.startswith(b'%PDF'):
                 indexed.extend(old)
                 continue
@@ -223,7 +223,7 @@ def main():
             print('Indexed', title, len(doc), 'pages')
         except (requests.RequestException, ValueError, RuntimeError) as exc:
             errors += 1
-            print('PDF skipped:', url, exc)
+            print('PDF skipped:', url, exc, '; retaining', len(old), 'previously indexed pages')
             indexed.extend(old)
         time.sleep(.2)
 
