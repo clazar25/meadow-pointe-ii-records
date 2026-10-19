@@ -266,7 +266,7 @@ def main():
     print('Removed', duplicates_removed, 'duplicate pages')
     indexed.sort(key=lambda item: (item.get('year', ''), item['title'], item['page']), reverse=True)
     # Never silently replace a populated archive with an empty or much smaller one.
-        old_count = len({
+    old_count = len({
         page_key(item) for item in previous.get('pages', [])
     })
     if old_count and len(indexed) < old_count:
