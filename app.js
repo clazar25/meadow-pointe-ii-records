@@ -57,18 +57,46 @@ function pageLink(page, label) {
 
 function scorePage(page, term) {
   if (!term) return 0;
+
   const title = String(page.title || '').toLowerCase();
   const body = String(page.text || '').toLowerCase();
-  return (title.split(term).length - 1) * 10 + (body.split(term).length - 1);
-}
+  const words = term.split(/\s+/).filter(Boolean);
+  const combined = title + ' ' + body;
 
+  let score = 0;
+
+  if (title.includes(term)) score += 100;
+  if (body.includes(term)) score += 50;
+
+  for (const word of words) {
+    if (title.includes(word)) score += 20;
+    if (body.includes(word)) score += 5;
+  }
+
+  if (page.type === 'Minutes') score += 15;
+
+  return score;
+}
 function search() {
   const term = q.value.trim().toLowerCase();
-  const matches = pages.filter(p =>
-    (!t.value || p.type === t.value) &&
-    (!y.value || p.year === y.value) &&
-    (!term || (String(p.title || '') + ' ' + String(p.text || '')).toLowerCase().includes(term))
-  );
+  const words = term.split(/\s+/).filter(Boolean);
+
+const eligible = pages.filter(p =>
+  (!t.value || p.type === t.value) &&
+  (!y.value || p.year === y.value)
+);
+
+const allWords = eligible.filter(p => {
+  const content = (String(p.title || '') + ' ' + String(p.text || '')).toLowerCase();
+  return words.every(word => content.includes(word));
+});
+
+const matches = allWords.length || !words.length
+  ? allWords
+  : eligible.filter(p => {
+      const content = (String(p.title || '') + ' ' + String(p.text || '')).toLowerCase();
+      return words.some(word => content.includes(word));
+    });
 
   const groups = new Map();
   for (const page of matches) {
