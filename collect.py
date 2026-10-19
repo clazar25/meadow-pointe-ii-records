@@ -72,7 +72,7 @@ for url,title in list(pdfs.items())[:MAX_PDFS]:
         doc=fitz.open(stream=bytes(data),filetype='pdf')
         filename=urlparse(url).path.rsplit('/',1)[-1]
         combined=(title+' '+filename).lower()
-        kind='Minutes' if 'minute' in combined else 'Agenda' if 'agenda' in combined else 'Other'
+        kind=classify_document(title, filename)
         years=re.findall(r'20(?:1\d|2\d|3\d)',combined)
         year=years[0] if years else ''
         for number,page in enumerate(doc,1):
