@@ -238,10 +238,37 @@ def main():
         by_source[item['source']].append(item)
     for pages in by_source.values():
         classify_pages(pages)
+    # Remove duplicate PDF pages using the PDF's SHA-256 fingerprint.
+    # Prefer the official CDD website URL when identical PDFs have multiple URLs.
+    def page_key(item):
+        fingerprint = item.get('sha256')
+        page_number = item.get('page')
+        if fingerprint:
+            return (fingerprint, page_number)
+        return (item.get('source', ''), page_number)
 
+    def preferred_source(item):
+        host = urlparse(item.get('source', '')).netloc.lower()
+        return 0 if host in (
+            'meadowpointe2cdd.org',
+            'www.meadowpointe2cdd.org'
+        ) else 1
+
+    indexed.sort(key=preferred_source)
+
+    unique_pages = {}
+    for item in indexed:
+        unique_pages.setdefault(page_key(item), item)
+
+    duplicates_removed = len(indexed) - len(unique_pages)
+    indexed = list(unique_pages.values())
+
+    print('Removed', duplicates_removed, 'duplicate pages')
     indexed.sort(key=lambda item: (item.get('year', ''), item['title'], item['page']), reverse=True)
     # Never silently replace a populated archive with an empty or much smaller one.
-    old_count = len(previous.get('pages', []))
+    old_count = len({
+        page_key(item) for item in previous.get('pages', [])
+    })
     if old_count and len(indexed) < old_count:
         raise SystemExit(
             f'Refusing to reduce archive from {old_count} to {len(indexed)} pages; '
