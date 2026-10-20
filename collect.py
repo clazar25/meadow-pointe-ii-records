@@ -30,17 +30,19 @@ MONTHS = (
     r'September|October|November|December'
 )
 
+
 def extract_meeting_date(title, filename):
-        iso_match = re.search(r'(?<!\d)(20\d{2}-\d{2}-\d{2})(?!\d)', text)
-        if iso_match:
-            try:
-                return datetime.strptime(
-                    iso_match.group(1), '%Y-%m-%d'
-                ).date().isoformat()
-            except ValueError:
-                return ''
-    """Extract an unambiguous meeting date from a document title or filename."""
+    """Extract a meeting date from a document title or filename."""
     text = title + ' ' + filename
+
+    iso_match = re.search(r'(?<!\d)(20\d{2}-\d{2}-\d{2})(?!\d)', text)
+    if iso_match:
+        try:
+            return datetime.strptime(
+                iso_match.group(1), '%Y-%m-%d'
+            ).date().isoformat()
+        except ValueError:
+            return ''
 
     match = re.search(
         rf'\b({MONTHS})\s+(\d{{1,2}}),?\s+(20\d{{2}})\b',
@@ -56,8 +58,10 @@ def extract_meeting_date(title, filename):
         except ValueError:
             return ''
 
-    
     return ''
+
+
+    
 def is_cdd_page(url):
     parsed = urlparse(url)
     return parsed.scheme == 'https' and parsed.netloc.lower() in (
