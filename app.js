@@ -2,6 +2,7 @@
 const q = document.querySelector('#query');
 const t = document.querySelector('#type');
 const y = document.querySelector('#year');
+const sort = document.querySelector('#sort');
 const status = document.querySelector('#status');
 const results = document.querySelector('#results');
 
@@ -130,11 +131,28 @@ const matches = allWords.length || !words.length
     };
   });
 
-  documents.sort((a, b) => {
-    if (term && b.score !== a.score) return b.score - a.score;
-    return b.year.localeCompare(a.year) || a.title.localeCompare(b.title);
-  });
+    documents.sort((a, b) => {
+    if (sort.value === 'newest') {
+      return b.year.localeCompare(a.year) ||
+        a.title.localeCompare(b.title);
+    }
 
+    if (sort.value === 'oldest') {
+      return a.year.localeCompare(b.year) ||
+        a.title.localeCompare(b.title);
+    }
+
+    if (sort.value === 'title') {
+      return a.title.localeCompare(b.title);
+    }
+
+    if (term && b.score !== a.score) {
+      return b.score - a.score;
+    }
+
+    return b.year.localeCompare(a.year) ||
+      a.title.localeCompare(b.title);
+  });
   status.textContent =
     `${documents.length.toLocaleString()} matching documents · ` +
     `${matches.length.toLocaleString()} matching pages · ` +
@@ -240,7 +258,7 @@ Promise.all([
   });
 
 
-[q, t, y].forEach(el => el.addEventListener('input', () => {
+[q, t, y, sort].forEach(el => el.addEventListener('input', () => {
   visibleDocuments = PAGE_SIZE;
   search();
 }));
