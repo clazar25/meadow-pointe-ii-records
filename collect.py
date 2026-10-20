@@ -31,6 +31,14 @@ MONTHS = (
 )
 
 def extract_meeting_date(title, filename):
+        iso_match = re.search(r'(?<!\d)(20\d{2}-\d{2}-\d{2})(?!\d)', text)
+        if iso_match:
+            try:
+                return datetime.strptime(
+                    iso_match.group(1), '%Y-%m-%d'
+                ).date().isoformat()
+            except ValueError:
+                return ''
     """Extract an unambiguous meeting date from a document title or filename."""
     text = title + ' ' + filename
 
