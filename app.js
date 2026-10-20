@@ -126,19 +126,24 @@ const matches = allWords.length || !words.length
       pages: group,
       ranked,
       score: scorePage(ranked[0], term),
-      year: group[0].year || '',
+           year: group[0].year || '',
+      meeting_date: group[0].meeting_date || '',
       title: group[0].title || 'Untitled document'
     };
   });
 
     documents.sort((a, b) => {
-    if (sort.value === 'newest') {
-      return b.year.localeCompare(a.year) ||
+        if (sort.value === 'newest') {
+      if (!a.meeting_date && b.meeting_date) return 1;
+      if (a.meeting_date && !b.meeting_date) return -1;
+      return b.meeting_date.localeCompare(a.meeting_date) ||
         a.title.localeCompare(b.title);
     }
 
     if (sort.value === 'oldest') {
-      return a.year.localeCompare(b.year) ||
+      if (!a.meeting_date && b.meeting_date) return 1;
+      if (a.meeting_date && !b.meeting_date) return -1;
+      return a.meeting_date.localeCompare(b.meeting_date) ||
         a.title.localeCompare(b.title);
     }
 
