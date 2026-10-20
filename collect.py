@@ -237,11 +237,13 @@ def main():
             filename = urlparse(url).path.rsplit('/', 1)[-1]
             years = re.findall(r'20(?:1\d|2\d|3\d)', (title + ' ' + filename).lower())
             year = years[0] if years else ''
+            meeting_date = extract_meeting_date(title, filename)
             for number, page in enumerate(doc, 1):
                 text = page.get_text(sort=True).strip()
                 indexed.append({
                     'source': url, 'url': url, 'title': title,
                     'type': 'Supporting Documents', 'year': year,
+                    'meeting_date': meeting_date,
                     'page': number, 'text': text[:25000], 'sha256': digest,
                     'needs_ocr': not bool(text)
                 })
