@@ -258,7 +258,7 @@ Promise.all([
   });
 
 
-[q, t, y].forEach(el => el.addEventListener('input', () => {
+[q, t, y, sort].forEach(el => el.addEventListener('input', () => {
   visibleDocuments = PAGE_SIZE;
   search();
 }));
