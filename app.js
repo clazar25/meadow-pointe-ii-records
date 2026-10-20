@@ -40,20 +40,31 @@ function excerptFor(page, term) {
     (start + snippet.length < body.length ? '…' : '');
 }
 
+
 function pageLink(page, label) {
   const raw = String(page.url || page.source || '');
   let safeUrl;
+
   try {
-    const parsed = new URL(raw);
-    if (!['http:', 'https:'].includes(parsed.protocol)) return escapeHtml(label);
+    const parsed = new URL(raw, window.location.href);
+
+    if (!['http:', 'https:'].includes(parsed.protocol)) {
+      return escapeHtml(label);
+    }
+
     safeUrl = escapeHtml(parsed.href.split('#')[0]);
   } catch (_) {
     return escapeHtml(label);
   }
+
   const number = Number(page.page);
-  const fragment = Number.isSafeInteger(number) && number > 0 ? `#page=${number}` : '';
+  const fragment = Number.isSafeInteger(number) && number > 0
+    ? `#page=${number}`
+    : '';
+
   return `<a href="${safeUrl}${fragment}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)}</a>`;
 }
+
 
 function scorePage(page, term) {
   if (!term) return 0;
@@ -178,15 +189,31 @@ const matches = allWords.length || !words.length
   }
 }
 
-fetch('records.json')
-  .then(r => {
-    if (!r.ok) throw Error('Index unavailable');
+
+Promise.all([
+  fetch('records.json').then(r => {
+    if (!r.ok) throw Error('CDD index unavailable');
+    return r.json();
+  }),
+  fetch('drive-records.json').then(r => {
+    if (!r.ok) throw Error('Google Drive index unavailable');
     return r.json();
   })
-  .then(data => {
-    pages = data.pages || [];
+])
+  .then(([cddData, driveData]) => {
+    const cddPages = cddData.pages || [];
+    const drivePages = (driveData.pages || []).map(p => ({
+      ...p,
+      title: p.title || p.source || 'Additional Public Record',
+      type: 'Additional Public Records',
+      year: String(p.year || ''),
+      source: `Additional Public Records: ${p.source || 'Document'}`
+    }));
+
+    pages = [...cddPages, ...drivePages];
+
     document.querySelector('#updated').textContent =
-      data.updated ? `Last indexed: ${data.updated}` : '';
+      cddData.updated ? `Last indexed: ${cddData.updated}` : '';
 
     [...new Set(pages.map(p => p.year).filter(Boolean))]
       .sort().reverse().forEach(year => {
@@ -194,11 +221,24 @@ fetch('records.json')
         option.value = option.textContent = year;
         y.appendChild(option);
       });
+
+    if (![...t.options].some(option =>
+      option.value === 'Additional Public Records'
+    )) {
+      const option = document.createElement('option');
+      option.value = 'Additional Public Records';
+      option.textContent = 'Additional Public Records';
+      t.appendChild(option);
+    }
+
     search();
   })
-  .catch(() => {
-    status.textContent = 'The archive could not be loaded. Please try again later.';
+  .catch(error => {
+    console.error('Archive loading error:', error);
+    status.textContent =
+      'The archive could not be loaded. Please try again later.';
   });
+
 
 [q, t, y].forEach(el => el.addEventListener('input', () => {
   visibleDocuments = PAGE_SIZE;
