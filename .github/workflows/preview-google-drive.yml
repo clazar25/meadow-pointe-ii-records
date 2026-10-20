@@ -23,7 +23,7 @@ jobs:
       - name: Package test website
         run: |
           mkdir -p preview
-          cp index.html app.js style.css records.json drive-records.json preview/
+          cp index.html app.js records.json drive-records.json preview/
           cp -r additional-public-records preview/
           cd preview
           zip -r ../google-drive-search-preview.zip .
