@@ -33,7 +33,7 @@ MONTHS = (
 
 def extract_meeting_date(title, filename):
     """Extract a meeting date from a document title or filename."""
-    text = title + ' ' + filename
+    text = title.split(', uploaded ')[0] + ' ' + filename
 
     iso_match = re.search(r'(?<!\d)(20\d{2}-\d{2}-\d{2})(?!\d)', text)
     if iso_match:
