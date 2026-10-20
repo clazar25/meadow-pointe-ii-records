@@ -2,6 +2,7 @@
 const q = document.querySelector('#query');
 const t = document.querySelector('#type');
 const y = document.querySelector('#year');
+const sort = document.querySelector('#sort');
 const status = document.querySelector('#status');
 const results = document.querySelector('#results');
 
