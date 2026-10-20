@@ -230,6 +230,12 @@ def main():
                 continue
             digest = hashlib.sha256(data).hexdigest()
             if old and old[0].get('sha256') == digest:
+                filename = urlparse(url).path.rsplit('/', 1)[-1]
+                meeting_date = extract_meeting_date(title, filename)
+
+                for item in old:
+                    item['meeting_date'] = meeting_date
+
                 indexed.extend(old)
                 continue
 
