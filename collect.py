@@ -25,7 +25,31 @@ session.headers['User-Agent'] = (
     'MeadowPointeIIResidentArchive/1.0 (public record index; contact via GitHub repository)'
 )
 
+MONTHS = (
+    r'January|February|March|April|May|June|July|August|'
+    r'September|October|November|December'
+)
 
+def extract_meeting_date(title, filename):
+    """Extract an unambiguous meeting date from a document title or filename."""
+    text = title + ' ' + filename
+
+    match = re.search(
+        rf'\b({MONTHS})\s+(\d{{1,2}}),?\s+(20\d{{2}})\b',
+        text,
+        re.IGNORECASE
+    )
+    if match:
+        try:
+            return datetime.strptime(
+                f'{match.group(1)} {match.group(2)} {match.group(3)}',
+                '%B %d %Y'
+            ).date().isoformat()
+        except ValueError:
+            return ''
+
+    
+    return ''
 def is_cdd_page(url):
     parsed = urlparse(url)
     return parsed.scheme == 'https' and parsed.netloc.lower() in (
