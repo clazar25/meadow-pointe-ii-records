@@ -31,6 +31,18 @@ jobs:
         env:
           GOOGLE_DRIVE_CREDENTIALS: ${{ secrets.GOOGLE_DRIVE_CREDENTIALS }}
         run: python sync_google_drive.py
+        
+      - name: Save Google Drive test files
+        if: github.ref == 'refs/heads/google-drive-documents'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add drive-records.json additional-public-records/
+          if ! git diff --cached --quiet; then
+            git commit -m "Update Google Drive test documents"
+            git push
+          fi
+
 
       - name: Install certificate chain
         run: |
