@@ -25,6 +25,13 @@ jobs:
 
       - name: Install requirements
         run: pip install -r requirements.txt
+        
+      - name: Test Google Drive connection
+        if: github.ref == 'refs/heads/google-drive-documents'
+        env:
+          GOOGLE_DRIVE_CREDENTIALS: ${{ secrets.GOOGLE_DRIVE_CREDENTIALS }}
+        run: python sync_google_drive.py
+
       - name: Install certificate chain
         run: |
           curl --fail --location --silent --show-error \
