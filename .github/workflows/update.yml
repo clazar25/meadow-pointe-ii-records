@@ -3,7 +3,7 @@ name: Update CDD Records
 
 on:
   workflow_dispatch:
-    schedule:
+  schedule:
     - cron: '0 12 * * *'
 
 permissions:
