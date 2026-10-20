@@ -56,7 +56,9 @@ def extract_meeting_date(title, filename):
                 '%B %d %Y'
             ).date().isoformat()
         except ValueError:
-            return ''numeric_match = re.search(
+            return ''
+    
+    numeric_match = re.search(
         r'(?<!\d)(\d{1,2})-(\d{1,2})-(20\d{2})(?!\d)',
         text
     )
